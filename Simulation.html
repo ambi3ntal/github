@@ -1,0 +1,38 @@
+# Create a Simulation Box
+
+dimension 3
+units metal
+boundary p p p
+atom_style atomic
+
+lattice fcc 4.58
+region myregion block 0 10 0 10 0 10     # Simulation Box Size = (0,0,0) to (45.8 45.8 45.8)
+create_box 1 myregion
+create_atoms 1 region myregion           # Fill the box with atoms
+
+mass 1 39.948
+
+# Define Interaction Potential
+
+pair_style lj/cut 10
+pair_coeff 1 1  0.01006418  3.3952
+
+# Perform Minimization
+minimize 1e-20 1e-20 10000 10000
+
+timestep 0.001
+
+# we will provide some initial velocity to the atoms by setting the temperature of our system equal to 300C
+velocity all create 400 102939 dist gaussian mom yes rot yes
+
+fix 1 all nve                            # Integrate equations of motion to update position and momenta of the atoms
+
+dump dump_1 all custom 100 yt.dump id type x y z   ix iy iz vx vy vz # For visualization in Ovito
+thermo_style  custom step time temp pr ke etotal press vol  # Data to be printed in Log file. Log file contains entire information of the system
+
+
+thermo 100                               # How frequently you want to print thermodynamic information
+run 5000                                 # Time = 0.001*5000 = 5ps
+
+undump dump_1
+unfix 1
